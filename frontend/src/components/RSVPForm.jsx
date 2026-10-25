@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Share2 } from 'lucide-react'
 import { api } from '../lib/api.js'
 import { GUEST_CAPACITY } from '../config.js'
+import { PatternFormat } from 'react-number-format'
 
 export default function RSVPForm({ formRef, summary }) {
   const navigate = useNavigate()
@@ -21,19 +22,28 @@ export default function RSVPForm({ formRef, summary }) {
     if (submissionInProgress.current) return
     setError('')
 
+    // Guard check for empty values
     if (!name.trim() || !phone.trim() || attending === null) {
       setError('Please fill in your name, phone number, and let us know if you can make it.')
       return
     }
 
+    // Exact length check for the 9-digit Zambian subscriber number
+    if (phone.length < 9) {
+      setError('Please enter a valid 9-digit Zambian phone number.')
+      return
+    }
+        
     submissionInProgress.current = true
     setSubmitting(true)
     try {
+      // Prepend +260 to the phone number before sending it to the backend
       const result = await api.submitRsvp({
         name: name.trim(),
-        phone: phone.trim(),
+        phone: `+260${phone}`, // Combines +260 with the 9 digits (e.g., "+260971234567")
         attending
       })
+
       if (attending) {
         navigate(`/ticket/${result.id}`)
       } else {
@@ -87,13 +97,23 @@ export default function RSVPForm({ formRef, summary }) {
 
         <div className="field">
           <label htmlFor={phoneId}>Phone number</label>
-          <input
+          <PatternFormat
             id={phoneId}
             type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="e.g. 097 123 4567"
+
+            //Enforces +260 code and spaces dynamically
+            format="+260 ### ### ###"
+            mask="_"
+            allowEmptyFormatting={true}
+
+
+            onValueChange={(values) => {
+              setPhone(values.value);
+            }}
+
             autoComplete="tel"
+            disabled={submitting}
           />
         </div>
 
