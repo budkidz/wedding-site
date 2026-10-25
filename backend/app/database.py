@@ -6,8 +6,22 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv()
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/wedding"
+def _normalize_database_url(url: str) -> str:
+    """Force the psycopg2 driver we install.
+
+    Hosts like Supabase hand out plain "postgresql://" (or "postgres://") URLs.
+    Newer SQLAlchemy versions pick the psycopg v3 driver for those, which is not
+    installed here and crashes the app on startup.
+    """
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg2://" + url[len("postgresql://"):]
+    return url
+
+
+DATABASE_URL = _normalize_database_url(
+    os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/wedding")
 )
 GUEST_CAPACITY = int(os.getenv("GUEST_CAPACITY", "150"))
 
