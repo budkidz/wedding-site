@@ -22,4 +22,4 @@ export const TIMELINE = [
 
 export const GUEST_CAPACITY = 150
 
-export const GALLERY_IMAGES = ['/images/hero-1.jpg', '/images/savedate.jpg', '/images/ring.jpg']
+export const GALLERY_IMAGES = ['/images/hero-1.jpg','/images/ring.jpg']
