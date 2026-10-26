@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import PersonalizedEvite from '../components/PersonalizedEvite.jsx'
+import Footer from '../components/Footer.jsx'
 import { api } from '../lib/api.js'
 import '../styles/sections.css'
 
@@ -33,23 +34,26 @@ export default function TicketPage() {
   }
 
   return (
-    <main className="page-shell ticket-page">
-      {rsvp.attending ? (
-        <>
-          <h1 className="ticket-page__confirmation">
-            Thank you, {rsvp.name.trim()}! Your attendance has been confirmed.
-          </h1>
-          <PersonalizedEvite
-            guestName={rsvp.name}
-            guestCount={rsvp.guest_count}
-            ticketCode={rsvp.ticket_code}
-          />
-        </>
-      ) : (
-        <p className="ticket-page__confirmation">
-          Thank you, {rsvp.name.trim()}, for letting us know. We&apos;ll miss you!
-        </p>
-      )}
-    </main>
+    <>
+      <main className="page-shell ticket-page">
+        {rsvp.attending ? (
+          <>
+            <h1 className="ticket-page__confirmation">
+              Thank you, {rsvp.name.trim()}! Your attendance has been confirmed.
+            </h1>
+            <PersonalizedEvite
+              guestName={rsvp.name}
+              guestCount={rsvp.guest_count}
+              ticketCode={rsvp.ticket_code}
+            />
+          </>
+        ) : (
+          <p className="ticket-page__confirmation">
+            Thank you, {rsvp.name.trim()}, for letting us know. We&apos;ll miss you!
+          </p>
+        )}
+      </main>
+      <Footer />
+    </>
   )
 }

@@ -1,9 +1,9 @@
-import html2canvas from 'html2canvas'
-
-const EVITE_BACKGROUND = '/images/wedding-evite-background.png'
+const EVITE_BACKGROUND = '/images/wedding-evite-background.webp'
 
 async function waitForImage(src) {
   const image = new Image()
+  // Same CORS mode html2canvas uses, so it reuses this download instead of fetching again.
+  image.crossOrigin = 'anonymous'
   image.src = src
   if (typeof image.decode === 'function') {
     await image.decode()
@@ -16,8 +16,17 @@ async function waitForImage(src) {
   })
 }
 
+// Call when the ticket page opens: downloads html2canvas and the background in the
+// background, so they are ready by the time the guest taps "Download E-vite".
+export function preloadEviteAssets() {
+  import('html2canvas').catch(() => {})
+  waitForImage(new URL(EVITE_BACKGROUND, window.location.origin).href).catch(() => {})
+}
+
 async function createEviteFile(element, baseName) {
-  await Promise.all([
+  // html2canvas is loaded on demand so it is not part of the home page download.
+  const [{ default: html2canvas }] = await Promise.all([
+    import('html2canvas'),
     document.fonts?.ready,
     waitForImage(new URL(EVITE_BACKGROUND, window.location.origin).href)
   ])
@@ -26,7 +35,7 @@ async function createEviteFile(element, baseName) {
     allowTaint: false,
     backgroundColor: null,
     logging: false,
-    scale: 3,
+    scale: 2,
     useCORS: true
   })
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))

@@ -6,6 +6,7 @@ import LocationSection from '../components/LocationSection.jsx'
 import RSVPForm from '../components/RSVPForm.jsx'
 import Notes from '../components/Notes.jsx'
 import Gallery from '../components/Gallery.jsx'
+import Footer from '../components/Footer.jsx'
 import '../styles/sections.css'
 import { api } from '../lib/api.js'
 
@@ -37,6 +38,7 @@ export default function Home() {
       </main>
       <Notes />
       <Gallery />
+      <Footer />
     </div>
   )
 }

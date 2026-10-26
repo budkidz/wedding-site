@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
-import { downloadEvite } from '../lib/evite.js'
+import { downloadEvite, preloadEviteAssets } from '../lib/evite.js'
 import '../styles/evite.css'
 
 const THANK_YOU_GIFT_MESSAGE =
@@ -18,6 +18,10 @@ export default function PersonalizedEvite({ guestName, guestCount, ticketCode })
   const [error, setError] = useState('')
   const name = guestName.trim()
   const fileName = `Dingani-Gloria-Wedding-${name}`
+
+  useEffect(() => {
+    preloadEviteAssets()
+  }, [])
 
   async function handleDownload() {
     if (!eviteRef.current || busy) return

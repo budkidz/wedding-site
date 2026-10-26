@@ -111,7 +111,7 @@
   background-color: var(--emerald-dark);
   background-image:
     linear-gradient(rgba(3, 47, 37, 0.60), rgba(3, 47, 37, 0.60)),
-    url('/images/Emerald-Gold-Background.png');
+    url('/images/Emerald-Gold-Background.webp');
   background-position: center;
   background-repeat: no-repeat;
   background-size: 100% 100%;
@@ -389,7 +389,7 @@
   isolation: isolate;
   background:
     linear-gradient(rgba(6, 78, 59, 0.68), rgba(3, 47, 37, 0.76)),
-    url('/images/ring.jpg') center 42% / cover no-repeat;
+    url('/images/ring.webp') center 42% / cover no-repeat;
   padding: 48px 24px;
   text-align: center;
   color: var(--ivory);

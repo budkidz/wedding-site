@@ -1,0 +1,27 @@
+.site-footer {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 16px 24px;
+  background: var(--emerald-dark);
+  border-top: 1px solid rgba(212, 175, 55, 0.35);
+  color: var(--muted-light);
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.site-footer__copyright {
+  color: var(--ivory);
+}
+
+.site-footer__credit {
+  margin-top: 4px;
+  color: var(--gold-pale);
+  letter-spacing: 0.02em;
+}
+
+.site-footer__credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -23,7 +23,7 @@ export default function Hero({ onRsvpClick }) {
   }
 
   return (
-    <section className="hero" style={{ backgroundImage: 'url(/images/hero.jpg)' }}>
+    <section className="hero" style={{ backgroundImage: 'url(/images/hero.webp)' }}>
       <div className="hero__overlay" />
 
       <div className="hero__top">
@@ -36,7 +36,7 @@ export default function Hero({ onRsvpClick }) {
           {playing ? '❙❙' : '♪'}
         </button>
         {/* Drop an MP3 at /public/audio/preview.mp3 and point this at it */}
-        <audio ref={audioRef} src="/audio/preview.mp3" loop />
+        <audio ref={audioRef} src="/audio/preview.mp3" preload="none" loop />
       </div>
 
       <div className="hero__bottom">
