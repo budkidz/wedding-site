@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Index, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Index, Integer, String, false
 from sqlalchemy.dialects.postgresql import UUID
 
 from .database import Base
@@ -30,9 +30,10 @@ class RSVP(Base):
     name = Column(String, nullable=False)
     attending = Column(Boolean, nullable=False)
     guest_count = Column(Integer, nullable=False, default=1)
+    approved = Column(Boolean, nullable=False, default=False, server_default=false())
 
     # Only meaningful when attending=True; used as the QR payload.
-    ticket_code = Column(String, unique=True, index=True, default=make_ticket_code)
+    ticket_code = Column(String, unique=True, index=True)
 
     checked_in = Column(Boolean, nullable=False, default=False)
     checked_in_at = Column(DateTime, nullable=True)

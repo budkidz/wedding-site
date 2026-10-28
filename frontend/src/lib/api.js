@@ -25,7 +25,9 @@ async function request(path, options = {}) {
     } catch {
       // Some hosting and proxy errors are plain text rather than JSON.
     }
-    throw new Error(detail || `Request failed (${res.status})`)
+    const error = new Error(detail || `Request failed (${res.status})`)
+    error.status = res.status
+    throw error
   }
   return res.json()
 }
@@ -39,5 +41,14 @@ export const api = {
   getEventSummary: () => request('/rsvp/summary'),
 
   checkIn: (ticketCode) =>
-    request('/check-in', { method: 'POST', body: JSON.stringify({ ticket_code: ticketCode }) })
+    request('/check-in', { method: 'POST', body: JSON.stringify({ ticket_code: ticketCode }) }),
+
+  getAdminRsvps: (adminKey) =>
+    request('/admin/rsvps', { headers: { 'X-Admin-Key': adminKey } }),
+
+  approveRsvp: (rsvpId, adminKey) =>
+    request(`/admin/rsvps/${rsvpId}/approve`, {
+      method: 'PUT',
+      headers: { 'X-Admin-Key': adminKey }
+    })
 }

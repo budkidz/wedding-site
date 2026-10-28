@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv()
@@ -47,3 +47,14 @@ def ensure_normalized_phone_unique_index():
         if index.name == "uq_rsvps_phone_normalized"
     )
     phone_index.create(bind=engine, checkfirst=True)
+
+
+def ensure_approval_column():
+    if "approved" in {column["name"] for column in inspect(engine).get_columns("rsvps")}:
+        return
+
+    # Existing RSVP tickets were already released, so preserve that state.
+    with engine.begin() as connection:
+        connection.execute(
+            text("ALTER TABLE rsvps ADD COLUMN approved BOOLEAN NOT NULL DEFAULT TRUE")
+        )

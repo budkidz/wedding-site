@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from uuid import UUID
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..database import GUEST_CAPACITY, get_db
+from ..notifications import notify_pending_rsvp
 from ..phone import normalize_phone_number, normalized_phone_expression
 
 router = APIRouter(prefix="/rsvp", tags=["rsvp"])
@@ -16,7 +19,11 @@ PHONE_ALREADY_USED = (
 
 
 @router.post("", response_model=schemas.RSVPOut)
-def create_rsvp(payload: schemas.RSVPCreate, db: Session = Depends(get_db)):
+def create_rsvp(
+    payload: schemas.RSVPCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     normalized_phone = normalize_phone_number(payload.phone)
     if not normalized_phone:
         raise HTTPException(status_code=422, detail="Enter a valid phone number.")
@@ -46,7 +53,8 @@ def create_rsvp(payload: schemas.RSVPCreate, db: Session = Depends(get_db)):
         phone=payload.phone,
         attending=payload.attending,
         guest_count=1 if payload.attending else 0,
-        ticket_code=models.make_ticket_code() if payload.attending else None,
+        approved=not payload.attending,
+        ticket_code=None,
     )
     db.add(rsvp)
 
@@ -63,6 +71,8 @@ def create_rsvp(payload: schemas.RSVPCreate, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(rsvp)
+    if payload.attending:
+        background_tasks.add_task(notify_pending_rsvp, rsvp.name)
     return rsvp
 
 
@@ -70,7 +80,10 @@ def create_rsvp(payload: schemas.RSVPCreate, db: Session = Depends(get_db)):
 def get_summary(db: Session = Depends(get_db)):
     confirmed = (
         db.query(func.coalesce(func.sum(models.RSVP.guest_count), 0))
-        .filter(models.RSVP.attending.is_(True))
+        .filter(
+            models.RSVP.attending.is_(True),
+            models.RSVP.approved.is_(True),
+        )
         .scalar()
     )
     declined = db.query(models.RSVP).filter(models.RSVP.attending.is_(False)).count()
@@ -85,7 +98,7 @@ def get_summary(db: Session = Depends(get_db)):
 
 
 @router.get("/{rsvp_id}", response_model=schemas.RSVPOut)
-def get_rsvp(rsvp_id: str, db: Session = Depends(get_db)):
+def get_rsvp(rsvp_id: UUID, db: Session = Depends(get_db)):
     rsvp = db.query(models.RSVP).filter(models.RSVP.id == rsvp_id).first()
     if not rsvp:
         raise HTTPException(status_code=404, detail="RSVP not found")

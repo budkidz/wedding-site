@@ -13,7 +13,10 @@ router = APIRouter(tags=["check-in"])
 def check_in_guest(payload: schemas.CheckInRequest, db: Session = Depends(get_db)):
     rsvp = (
         db.query(models.RSVP)
-        .filter(models.RSVP.ticket_code == payload.ticket_code)
+        .filter(
+            models.RSVP.ticket_code == payload.ticket_code,
+            models.RSVP.approved.is_(True),
+        )
         .first()
     )
     if not rsvp:

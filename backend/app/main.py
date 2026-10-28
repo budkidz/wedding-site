@@ -4,12 +4,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import models
-from .database import Base, engine, ensure_normalized_phone_unique_index
-from .routers import checkin, rsvp
+from .database import (
+    Base,
+    engine,
+    ensure_approval_column,
+    ensure_normalized_phone_unique_index,
+)
+from .routers import admin, checkin, rsvp
 
 # Dev-friendly: creates tables if they don't exist yet.
 # For a real deployment, switch to Alembic migrations instead — see README.
 Base.metadata.create_all(bind=engine)
+ensure_approval_column()
 ensure_normalized_phone_unique_index()
 
 app = FastAPI(title="Dingani & Gloria Wedding API")
@@ -29,6 +35,7 @@ app.add_middleware(
 
 app.include_router(rsvp.router)
 app.include_router(checkin.router)
+app.include_router(admin.router)
 
 
 @app.get("/health")

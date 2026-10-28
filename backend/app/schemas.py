@@ -15,6 +15,7 @@ class RSVPOut(BaseModel):
     name: str
     attending: bool
     guest_count: int
+    approved: bool
     ticket_code: str | None
     checked_in: bool
     created_at: datetime
@@ -28,6 +29,11 @@ class EventSummary(BaseModel):
     confirmed_guests: int
     declined_count: int
     checked_in_count: int
+
+
+class AdminRSVPOut(RSVPOut):
+    phone: str
+    checked_in_at: datetime | None
 
 
 class CheckInRequest(BaseModel):

@@ -6,7 +6,7 @@ frontend, FastAPI + PostgreSQL backend.
 
 ```text
 wedding-site/
-├── frontend/           React site (guest-facing + staff scanner)
+├── frontend/           React site (guest-facing, admin dashboard + staff scanner)
 │   └── src/
 │       ├── config.js   ← edit date, venue, timeline, capacity here
 │       ├── components/
@@ -35,11 +35,17 @@ copy .env.example .env
 ```
 
 Edit `backend/.env` and set `DATABASE_URL` to your local PostgreSQL connection
-string. Create an empty database named `wedding` (or use a different database
-and update the URL):
+string and `ADMIN_API_KEY` to a long, unique secret. Create an empty database
+named `wedding` (or use a different database and update the URL):
 
 ```bash
 createdb wedding
+```
+
+Generate a strong admin key with:
+
+```powershell
+python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
 Start the API from the `backend` directory:
@@ -65,7 +71,8 @@ npm run dev
 Open `http://localhost:5173`. Vite proxies local `/api/*` requests to the
 backend. In production, `VITE_API_BASE_URL` points directly to the deployed API.
 For a local end-to-end check, keep both terminals running, submit a test RSVP,
-and verify that its confirmation page loads.
+open `/admin`, approve it using the configured admin key, and verify that its
+ticket page unlocks.
 
 ## 2. What to edit
 
@@ -79,13 +86,23 @@ and verify that its confirmation page loads.
 ## 3. How the pieces fit together
 
 - Each RSVP is for one person and is saved in PostgreSQL via `POST /rsvp`.
-  Attending guests receive a unique `ticket_code`; no Google Sheets account or
-  service is needed. Each accompanying guest must submit their own RSVP.
-- Attending guests are redirected to `/ticket/:id`, which displays their
-  personalized e-vite and their unique check-in QR code separately. Guests can
-  download the e-vite and QR code as separate images; the QR can be scanned at
-  `/staff/check-in`.
+  New attending RSVPs stay pending until an admin approves them. Approval
+  creates the unique `ticket_code` and unlocks the guest's `/ticket/:id` page;
+  no SMS or email is sent. Each accompanying guest must submit their own RSVP.
+- Admins can open `/admin`, enter the backend `ADMIN_API_KEY`, browse and search
+  RSVP records, filter by response status, and approve pending invitations.
+  The key is kept in the current browser tab's session storage and is never
+  included in the frontend build.
+- Optionally, set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` on the backend to
+  get a Telegram message whenever a guest RSVPs "yes" and awaits approval.
+  Create a bot with @BotFather, send it a message, then find your chat ID in
+  `https://api.telegram.org/bot<TOKEN>/getUpdates`. Failures never affect the RSVP.
+- After approval, `/ticket/:id` displays the personalized e-vite and unique
+  check-in QR code separately. Guests can download the e-vite and QR code as
+  separate images; the QR can be scanned at `/staff/check-in`.
 - Declined RSVPs are saved but do not receive an attendance ticket.
+- Existing RSVP records are marked approved on startup migration so previously
+  issued tickets remain valid.
 - Phone numbers are unique after removing spaces and punctuation and converting
   Zambian `+260` / `00260` prefixes to local `0` format.
 - Staff can scan the guest QR code at `/staff/check-in`. This page is not linked
@@ -137,17 +154,18 @@ starts for the first time.
    the backend root directory, install/start commands, health check, and free
    web-service plan.
 4. When asked for Blueprint environment values, paste the Supabase Session
-   pooler URI into `DATABASE_URL`. Set `CORS_ORIGINS` temporarily to
-   `https://example.netlify.app`; replace it with the real Netlify URL after
-   step D.
+   pooler URI into `DATABASE_URL`. Set `ADMIN_API_KEY` to a long, unique secret
+   and `CORS_ORIGINS` temporarily to `https://example.netlify.app`; replace it
+   with the real Netlify URL after step D.
 5. Create/deploy the service and wait for it to finish. Copy the Render service
    origin, for example `https://your-api.onrender.com` (no trailing slash).
 6. Open `https://your-api.onrender.com/health` in a browser. A successful
    service responds with `{"status":"ok"}`.
 
 If Render did not prompt for environment values, open the service's
-**Environment** settings, add `DATABASE_URL` and `CORS_ORIGINS`, save, and
-redeploy. Never put the database URL in frontend variables.
+**Environment** settings, add `DATABASE_URL`, `ADMIN_API_KEY`, and
+`CORS_ORIGINS`, save, and redeploy. Never put the database URL or admin key in
+frontend variables.
 
 ### D. Deploy the React frontend to Netlify
 
@@ -179,14 +197,16 @@ redeploy. Never put the database URL in frontend variables.
 1. Open the Netlify URL and confirm the homepage and **Open in maps** link work.
 2. Submit one attending RSVP using a test phone number. Each person must submit
    their own RSVP; an attending RSVP counts as one guest.
-3. Confirm the personalized e-vite appears and that both **Download E-vite**
-   and **Download QR Code** work.
-4. On `/staff/check-in`, test the camera and the **Upload QR image** fallback
+3. Confirm the ticket page shows the awaiting-approval message. Open `/admin`,
+   sign in with `ADMIN_API_KEY`, and approve the test RSVP.
+4. Reload its ticket page and confirm the e-vite plus **Download E-vite** and
+   **Download QR Code** work.
+5. On `/staff/check-in`, test the camera and the **Upload QR image** fallback
    with the downloaded QR. Confirm the guest name is displayed and the checked
    in total changes.
-5. Test a declined RSVP and the duplicate-phone validation. Use only test
+6. Test a declined RSVP and the duplicate-phone validation. Use only test
    details; an accepted RSVP occupies a place in the database.
-6. In Supabase **Table Editor**, inspect the `rsvps` table and confirm the test
+7. In Supabase **Table Editor**, inspect the `rsvps` table and confirm the test
    record exists. Remove test records through the dashboard before launch if
    desired, taking care not to delete real RSVPs.
 
@@ -200,6 +220,8 @@ production-level uptime or permanent data retention.
 
 - **Protect `/staff/check-in`.** Anyone who knows the URL can currently use the
   scanner. Add authentication or otherwise restrict access.
+- **Keep `ADMIN_API_KEY` private.** Set it only on the backend, use a unique
+  random value, and rotate it if it is exposed.
 - **Swap the photos.** Replace the watermarked reference images in
   `frontend/public/images/`.
 - **Migrations.** `Base.metadata.create_all()` is used for startup convenience;

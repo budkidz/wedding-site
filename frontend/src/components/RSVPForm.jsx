@@ -74,12 +74,6 @@ export default function RSVPForm({ formRef, summary }) {
         <span className="line" />
       </div>
       <p className="rsvp__subtitle">Please confirm your attendance</p>
-      {summary && (
-        <p className="rsvp__count">
-          {summary.confirmed_guests} of {GUEST_CAPACITY} guests confirmed
-        </p>
-      )}
-
       <form onSubmit={handleSubmit}>
         {error && <p className="form-error">{error}</p>}
 

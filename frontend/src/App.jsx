@@ -5,6 +5,7 @@ import Home from './pages/Home.jsx'
 // Loaded only when someone opens these pages, so the home page stays small and fast.
 const TicketPage = lazy(() => import('./pages/TicketPage.jsx'))
 const CheckInPage = lazy(() => import('./pages/CheckInPage.jsx'))
+const AdminPage = lazy(() => import('./pages/AdminPage.jsx'))
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/ticket/:rsvpId" element={<TicketPage />} />
           {/* Staff-only gate scanner — not linked from the public site */}
           <Route path="/staff/check-in" element={<CheckInPage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
