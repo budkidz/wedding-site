@@ -60,3 +60,28 @@ def approve_rsvp(
         db.refresh(rsvp)
 
     return rsvp
+
+
+@router.delete("/rsvps/{rsvp_id}")
+def reject_rsvp(
+    rsvp_id: UUID,
+    _: None = Depends(require_admin_key),
+    db: Session = Depends(get_db),
+):
+    rsvp = (
+        db.query(models.RSVP)
+        .filter(models.RSVP.id == rsvp_id)
+        .with_for_update()
+        .first()
+    )
+    if not rsvp:
+        raise HTTPException(status_code=404, detail="RSVP not found.")
+    if not rsvp.attending or rsvp.approved:
+        raise HTTPException(
+            status_code=400,
+            detail="Only RSVPs awaiting approval can be rejected.",
+        )
+
+    db.delete(rsvp)
+    db.commit()
+    return {"status": "deleted"}

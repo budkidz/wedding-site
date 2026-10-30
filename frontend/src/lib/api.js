@@ -50,5 +50,11 @@ export const api = {
     request(`/admin/rsvps/${rsvpId}/approve`, {
       method: 'PUT',
       headers: { 'X-Admin-Key': adminKey }
+    }),
+
+  rejectRsvp: (rsvpId, adminKey) =>
+    request(`/admin/rsvps/${rsvpId}`, {
+      method: 'DELETE',
+      headers: { 'X-Admin-Key': adminKey }
     })
 }

@@ -97,6 +97,11 @@ ticket page unlocks.
   get a Telegram message whenever a guest RSVPs "yes" and awaits approval.
   Create a bot with @BotFather, send it a message, then find your chat ID in
   `https://api.telegram.org/bot<TOKEN>/getUpdates`. Failures never affect the RSVP.
+- Pending RSVPs also have a **Reject** button (with a confirmation prompt) that
+  permanently deletes the request and frees the phone number.
+- Approved guests get a **Send on WhatsApp** button in the dashboard. It opens
+  WhatsApp with a pre-filled message containing the guest's ticket link; you
+  press send from your own WhatsApp.
 - After approval, `/ticket/:id` displays the personalized e-vite and unique
   check-in QR code separately. Guests can download the e-vite and QR code as
   separate images; the QR can be scanned at `/staff/check-in`.

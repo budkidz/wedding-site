@@ -117,6 +117,30 @@
   font-size: 12px;
 }
 
+.admin-table__buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.admin-button--reject {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 0;
+  background: #fbeceb;
+  color: #a33e39;
+  font-size: 12px;
+}
+
+.admin-button--whatsapp {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 0;
+  background: #e3f6e9;
+  color: #14693a;
+  font-size: 12px;
+  text-decoration: none;
+}
+
 .admin-button:disabled {
   cursor: wait;
   opacity: 0.6;

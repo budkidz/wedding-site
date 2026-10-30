@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clock3,
   LogOut,
+  MessageCircle,
   RefreshCw,
   Search,
   Users,
@@ -19,6 +20,19 @@ function formatDate(value) {
     dateStyle: 'medium',
     timeStyle: 'short'
   }).format(new Date(value))
+}
+
+// wa.me needs digits only, with the country code and no leading 0 or +.
+function whatsAppUrl(rsvp) {
+  let digits = rsvp.phone.replace(/\D/g, '')
+  if (digits.startsWith('00')) digits = digits.slice(2)
+  else if (digits.startsWith('0')) digits = `260${digits.slice(1)}`
+
+  const ticketUrl = `${window.location.origin}/ticket/${rsvp.id}`
+  const message =
+    `Hello ${rsvp.name.trim()}, your RSVP for Dingani & Gloria's wedding has been approved! ` +
+    `Open your invitation and check-in QR code here: ${ticketUrl}`
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
 }
 
 export default function AdminPage() {
@@ -113,6 +127,31 @@ export default function AdminPage() {
       const approved = await api.approveRsvp(rsvp.id, adminKey)
       setRsvps((current) => current.map((row) => row.id === approved.id ? approved : row))
       setNotice(`${approved.name} approved. Their ticket page is now available.`)
+    } catch (err) {
+      setError(err.message)
+      if (err.status === 401) {
+        sessionStorage.removeItem(STORAGE_KEY)
+        setAdminKey('')
+      }
+    } finally {
+      setApprovingId('')
+    }
+  }
+
+  async function handleReject(rsvp) {
+    const confirmed = window.confirm(
+      `Reject and permanently delete the RSVP from ${rsvp.name}? ` +
+      'Their phone number will be free to RSVP again. This cannot be undone.'
+    )
+    if (!confirmed) return
+
+    setApprovingId(rsvp.id)
+    setError('')
+    setNotice('')
+    try {
+      await api.rejectRsvp(rsvp.id, adminKey)
+      setRsvps((current) => current.filter((row) => row.id !== rsvp.id))
+      setNotice(`${rsvp.name}'s RSVP was rejected and deleted.`)
     } catch (err) {
       setError(err.message)
       if (err.status === 401) {
@@ -284,14 +323,35 @@ export default function AdminPage() {
                     </td>
                     <td className="admin-table__action">
                       {rsvp.attending && !rsvp.approved && (
-                        <button
-                          className="admin-button admin-button--approve"
-                          type="button"
-                          onClick={() => handleApprove(rsvp)}
-                          disabled={Boolean(approvingId)}
+                        <div className="admin-table__buttons">
+                          <button
+                            className="admin-button admin-button--approve"
+                            type="button"
+                            onClick={() => handleApprove(rsvp)}
+                            disabled={Boolean(approvingId)}
+                          >
+                            {approvingId === rsvp.id ? 'Working…' : 'Approve & release'}
+                          </button>
+                          <button
+                            className="admin-button admin-button--reject"
+                            type="button"
+                            onClick={() => handleReject(rsvp)}
+                            disabled={Boolean(approvingId)}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                      {rsvp.attending && rsvp.approved && (
+                        <a
+                          className="admin-button admin-button--whatsapp"
+                          href={whatsAppUrl(rsvp)}
+                          target="_blank"
+                          rel="noopener noreferrer"
                         >
-                          {approvingId === rsvp.id ? 'Approving…' : 'Approve & release'}
-                        </button>
+                          <MessageCircle size={14} />
+                          Send on WhatsApp
+                        </a>
                       )}
                     </td>
                   </tr>
